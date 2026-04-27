@@ -1,0 +1,1 @@
+"""ShopBuilder FastAPI application package."""

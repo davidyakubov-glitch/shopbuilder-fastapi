@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Test
+        env:
+          APP_ENV: test
+          APP_NAME: ShopBuilder Test API
+          PLATFORM_DATABASE_URL: sqlite:///./platform_ci.db
+          TENANT_DATABASE_URLS: '{"merchant_alpha":"sqlite:///./tenant_alpha_ci.db","merchant_beta":"sqlite:///./tenant_beta_ci.db"}'
+          REDIS_URL: redis://localhost:6379/15
+          JWT_SECRET_KEY: ci-access-secret-key-1234567890
+          JWT_REFRESH_SECRET_KEY: ci-refresh-secret-key-1234567890
+          WEBHOOK_SIGNING_SECRET: ci-webhook-secret-key-1234567890
+          CORS_ORIGINS: http://localhost:3000,http://localhost:8000
+        run: pytest
+
+      - name: Docker build
+        run: docker build -t shopbuilder-fastapi .
