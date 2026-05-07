@@ -5,7 +5,6 @@ from app.schemas.order import OrderCreate
 from app.services.checkout_service import create_checkout_order
 from app.services.order_service import list_orders
 
-
 router = APIRouter(tags=["Orders"])
 
 

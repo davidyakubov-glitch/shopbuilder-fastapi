@@ -5,7 +5,6 @@ from app.dependencies import db_session, load_store_membership, owner_membership
 from app.schemas.product import ProductListResponse, ProductRead, ProductVariantMatrixRequest, VariantMatrixResponse
 from app.services.product_service import create_variant_matrix, list_products
 
-
 router = APIRouter(tags=["Products"])
 
 

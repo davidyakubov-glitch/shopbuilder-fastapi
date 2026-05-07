@@ -2,7 +2,9 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
 class RegisterRequest(BaseModel):
-    model_config = ConfigDict(json_schema_extra={"example": {"email": "owner@example.com", "password": "StrongPass!2026"}})
+    model_config = ConfigDict(
+        json_schema_extra={"example": {"email": "owner@example.com", "password": "StrongPass!2026"}}
+    )
 
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
@@ -22,7 +24,9 @@ class RegisterRequest(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    model_config = ConfigDict(json_schema_extra={"example": {"email": "owner@example.com", "password": "StrongPass!2026"}})
+    model_config = ConfigDict(
+        json_schema_extra={"example": {"email": "owner@example.com", "password": "StrongPass!2026"}}
+    )
 
     email: EmailStr
     password: str
@@ -40,6 +44,28 @@ class LogoutRequest(BaseModel):
     refresh_token: str
 
 
+class EmailVerificationRequest(BaseModel):
+    token: str = Field(min_length=20)
+
+
+class ResendVerificationRequest(BaseModel):
+    email: EmailStr
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str = Field(min_length=20)
+    new_password: str = Field(min_length=8, max_length=128)
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_password_strength(cls, value: str) -> str:
+        return RegisterRequest.validate_password_strength(value)
+
+
 class TokenPairResponse(BaseModel):
     access_token: str
     refresh_token: str
@@ -49,3 +75,7 @@ class TokenPairResponse(BaseModel):
 
 class LogoutResponse(BaseModel):
     message: str = "Refresh token revoked."
+
+
+class MessageResponse(BaseModel):
+    message: str

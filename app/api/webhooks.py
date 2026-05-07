@@ -5,11 +5,14 @@ from app.dependencies import db_session, load_store_membership, owner_membership
 from app.schemas.webhook import WebhookAccepted, WebhookEventRead, WebhookInbound
 from app.services.webhook_service import accept_webhook, list_webhook_events
 
-
 router = APIRouter(tags=["Webhooks"])
 
 
-@router.get("/stores/{store_id}/webhooks/events", response_model=list[WebhookEventRead], summary="List webhook events for a merchant")
+@router.get(
+    "/stores/{store_id}/webhooks/events",
+    response_model=list[WebhookEventRead],
+    summary="List webhook events for a merchant",
+)
 def get_webhook_events(
     store_id: str,
     _: object = Depends(load_store_membership),

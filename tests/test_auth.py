@@ -2,6 +2,7 @@ from sqlmodel import Session, select
 
 from app.database import platform_engine
 from app.models.membership import MembershipRole, StoreMembership
+from app.models.user import User
 
 
 def register_and_login(client):
@@ -65,6 +66,41 @@ def test_full_auth_flow_register_login_refresh_logout(client):
     assert register_payload["access_token"]
 
 
+def test_email_verification_and_password_reset(client, monkeypatch):
+    sent_messages = []
+
+    def capture_email(to_email, subject, html, text=None):
+        sent_messages.append({"to": to_email, "subject": subject, "text": text or html})
+
+    monkeypatch.setattr("app.services.auth_service.enqueue_email", capture_email)
+
+    register_and_login(client)
+    verification_token = sent_messages[-1]["text"].split("token=", 1)[1]
+
+    verify_response = client.post("/api/v1/auth/email/verify", json={"token": verification_token})
+    assert verify_response.status_code == 200
+
+    with Session(platform_engine) as session:
+        user = session.exec(select(User).where(User.email == "owner@example.com")).first()
+        assert user.is_email_verified is True
+
+    forgot_response = client.post("/api/v1/auth/password/forgot", json={"email": "owner@example.com"})
+    assert forgot_response.status_code == 200
+    reset_token = sent_messages[-1]["text"].split("token=", 1)[1]
+
+    reset_response = client.post(
+        "/api/v1/auth/password/reset",
+        json={"token": reset_token, "new_password": "NewStrongPass!2026"},
+    )
+    assert reset_response.status_code == 200
+
+    login_response = client.post(
+        "/api/v1/auth/login",
+        json={"email": "owner@example.com", "password": "NewStrongPass!2026"},
+    )
+    assert login_response.status_code == 200
+
+
 def test_protected_endpoint_rejects_missing_and_invalid_token(client):
     missing_token_response = client.get("/api/v1/stores")
     assert missing_token_response.status_code == 401
@@ -81,7 +117,8 @@ def test_wrong_role_receives_403_for_owner_only_endpoint(client):
     store_payload = create_store(client, auth_payload["access_token"])
 
     with Session(platform_engine) as session:
-        membership = session.exec(select(StoreMembership).where(StoreMembership.store_id == store_payload["id"])).first()
+        statement = select(StoreMembership).where(StoreMembership.store_id == store_payload["id"])
+        membership = session.exec(statement).first()
         membership.role = MembershipRole.staff
         session.add(membership)
         session.commit()

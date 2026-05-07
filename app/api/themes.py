@@ -3,7 +3,6 @@ from fastapi import APIRouter, Depends
 from app.dependencies import load_store_membership, owner_membership
 from app.services.theme_service import list_themes, publish_theme
 
-
 router = APIRouter(tags=["Themes"])
 
 

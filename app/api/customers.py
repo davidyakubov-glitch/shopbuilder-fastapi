@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends
 
 from app.dependencies import load_store_membership
 
-
 router = APIRouter(tags=["Customers"])
 
 

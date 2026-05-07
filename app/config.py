@@ -1,5 +1,6 @@
 import json
 from functools import lru_cache
+from typing import Any
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -26,8 +27,10 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_ttl_minutes: int = 15
     refresh_token_ttl_days: int = 7
+    email_token_ttl_minutes: int = 60
+    password_reset_token_ttl_minutes: int = 30
 
-    cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000", "http://localhost:8000"])
+    cors_origins: Any = Field(default_factory=lambda: ["http://localhost:3000", "http://localhost:8000"])
 
     login_rate_limit_attempts: int = 5
     login_rate_limit_window_seconds: int = 60
@@ -41,6 +44,27 @@ class Settings(BaseSettings):
     webhook_signing_secret: str = Field(min_length=32)
     theme_sandbox_mode: str = "strict"
     default_currency: str = "KZT"
+    app_public_url: str = "http://localhost:8000"
+
+    email_provider: str = "resend"
+    email_from: str = "ShopBuilder <onboarding@resend.dev>"
+    resend_api_key: str = ""
+    email_delivery_mode: str = "queue"
+
+    celery_broker_url: str | None = None
+    celery_result_backend: str | None = None
+
+    @field_validator("debug", mode="before")
+    @classmethod
+    def parse_debug(cls, value: bool | str) -> bool:
+        if isinstance(value, bool):
+            return value
+        normalized = value.strip().lower()
+        if normalized in {"1", "true", "yes", "on", "debug"}:
+            return True
+        if normalized in {"0", "false", "no", "off", "release"}:
+            return False
+        raise ValueError("DEBUG must be a boolean-like value.")
 
     @field_validator("tenant_database_urls", mode="before")
     @classmethod
@@ -83,6 +107,14 @@ class Settings(BaseSettings):
             raise ValueError(f"APP_ENV must be one of {sorted(allowed)}.")
         return value
 
+    @field_validator("email_delivery_mode")
+    @classmethod
+    def validate_email_delivery_mode(cls, value: str) -> str:
+        allowed = {"queue", "sync", "log"}
+        if value not in allowed:
+            raise ValueError(f"EMAIL_DELIVERY_MODE must be one of {sorted(allowed)}.")
+        return value
+
     @property
     def parsed_tenant_database_urls(self) -> dict[str, str]:
         return json.loads(self.tenant_database_urls)
@@ -90,6 +122,14 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.app_env == "production"
+
+    @property
+    def resolved_celery_broker_url(self) -> str:
+        return self.celery_broker_url or self.redis_url
+
+    @property
+    def resolved_celery_result_backend(self) -> str:
+        return self.celery_result_backend or self.redis_url
 
 
 @lru_cache

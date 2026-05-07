@@ -55,12 +55,13 @@ def create_variant_matrix(platform_session: Session, store_id: str, payload) -> 
             )
             tenant_session.add(product_row)
             tenant_session.flush()
+            product_id = product_row.id
 
             option_value_map: dict[tuple[str, str], str] = {}
             for position, axis in enumerate(payload.attributes, start=1):
                 option_row = ProductOption(
                     id=f"opt_{uuid4().hex}",
-                    product_id=product_row.id,
+                    product_id=product_id,
                     position=position,
                     name=axis.name,
                 )
@@ -102,7 +103,7 @@ def create_variant_matrix(platform_session: Session, store_id: str, payload) -> 
                 variant_row = ProductVariant(
                     id=f"var_{uuid4().hex}",
                     store_id=store_id,
-                    product_id=product_row.id,
+                    product_id=product_id,
                     sku=sku,
                     title=title,
                     price_amount=payload.price_amount,
@@ -157,7 +158,7 @@ def create_variant_matrix(platform_session: Session, store_id: str, payload) -> 
             raise
 
     return {
-        "product_id": product_row.id,
+        "product_id": product_id,
         "generated_variant_count": len(generated_variants),
         "variants": generated_variants,
     }

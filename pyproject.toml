@@ -1,0 +1,14 @@
+[tool.ruff]
+line-length = 120
+exclude = [
+    ".git",
+    ".venv",
+    ".python312",
+    ".tmp",
+    ".pytest_cache",
+    "pytest-cache-files-*",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+per-file-ignores = { "tests/conftest.py" = ["E402"] }

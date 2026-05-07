@@ -25,4 +25,9 @@ def rate_limit_login(request: Request) -> None:
 
 def rate_limit_register(request: Request) -> None:
     client_ip = request.client.host if request.client else "unknown"
-    enforce_rate_limit("register", client_ip, settings.register_rate_limit_attempts, settings.register_rate_limit_window_seconds)
+    enforce_rate_limit(
+        "register",
+        client_ip,
+        settings.register_rate_limit_attempts,
+        settings.register_rate_limit_window_seconds,
+    )

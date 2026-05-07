@@ -1,5 +1,3 @@
-from typing import Annotated
-
 from fastapi import Depends, Header, HTTPException, Path, status
 from sqlmodel import Session, select
 
@@ -52,7 +50,10 @@ def load_store_membership(
     )
     membership = session.exec(statement).first()
     if membership is None:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Membership does not grant access to this store.")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Membership does not grant access to this store.",
+        )
     return membership
 
 

@@ -1,0 +1,13 @@
+.env
+.venv/
+.python312/
+.tmp/
+*.db
+*.sqlite
+*.sqlite3
+python-*.nupkg
+python-*.zip
+__pycache__/
+.pytest_cache/
+pytest-cache-files-*/
+uvicorn.*.log

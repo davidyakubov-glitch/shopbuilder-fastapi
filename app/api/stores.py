@@ -5,7 +5,6 @@ from app.dependencies import current_user_id, db_session
 from app.schemas.store import MerchantOnboardRequest, StoreListResponse, StoreRead
 from app.services.store_service import list_user_stores, onboard_merchant
 
-
 router = APIRouter(tags=["Stores"])
 
 
